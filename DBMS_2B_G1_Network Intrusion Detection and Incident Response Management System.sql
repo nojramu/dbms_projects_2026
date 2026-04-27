@@ -278,7 +278,7 @@ VALUES (21, 'PC-111', NULL, 'Workstation', 'Office', 'broken');
 -- Number 1
 SELECT A.name AS 'Analyst Name',
 I.title AS 'Incident',
-IA.assigned_at 'Assigned at'
+IA.assigned_at AS 'Assigned at'
 FROM Analysts A
 JOIN Incidentassignment IA ON A.analyst_id = IA.analyst_id
 JOIN Incidents I ON IA.incident_id = I.incident_id
