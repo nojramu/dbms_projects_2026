@@ -1,0 +1,81 @@
+CREATE DATABASE ml_registry;
+USE ml_registry;
+
+
+CREATE TABLE MODELS (
+model_id INT PRIMARY KEY,
+model_name VARCHAR(100) NOT NULL,
+model_type VARCHAR(50) NOT NULL,
+created_at DATE NOT NULL
+);
+
+CREATE TABLE DATASETS (
+dataset_id INT PRIMARY KEY,
+dataset_name VARCHAR(100) NOT NULL,
+source VARCHAR(100) NOT NULL,
+version VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE EXPERIMENTS (
+experiment_id INT PRIMARY KEY,
+model_id INT,
+dataset_id INT,
+experiment_date DATE NOT NULL,
+description VARCHAR(200),
+
+FOREIGN KEY (model_id) REFERENCES MODELS(model_id),
+FOREIGN KEY (dataset_id) REFERENCES DATASETS(dataset_id)
+);
+
+CREATE TABLE METRICS (
+metric_id INT PRIMARY KEY,
+experiment_id INT,
+accuracy DECIMAL(5,2),
+loss DECIMAL(5,2),
+precision_score DECIMAL(5,2),
+recall_score DECIMAL(5,2),
+
+FOREIGN KEY (experiment_id) REFERENCES EXPERIMENTS(experiment_id)
+);
+
+CREATE TABLE DEPLOYMENTS (
+deployment_id INT PRIMARY KEY,
+model_id INT,
+deployment_date DATE NOT NULL,
+environment VARCHAR(20) NOT NULL,
+status VARCHAR(20) NOT NULL,
+
+FOREIGN KEY (model_id) REFERENCES MODELS(model_id)
+);
+
+INSERT INTO MODELS VALUES
+(1, 'Spam Detector', 'Naive Bayes', '2025-01-01'),
+(2, 'Image Classifier', 'CNN', '2025-02-01'),
+(3, 'Fraud Detection', 'Random Forest', '2025-03-01');
+
+INSERT INTO DATASETS VALUES
+(1, 'Email Dataset', 'Kaggle', 'v1'),
+(2, 'Image Dataset', 'Open Source', 'v2'),
+(3, 'Transaction Data', 'Company', 'v1');
+
+INSERT INTO EXPERIMENTS VALUES
+(1, 1, 1, '2025-03-10', 'Initial testing'),
+(2, 2, 2, '2025-03-12', 'Improved accuracy'),
+(3, 3, 3, '2025-03-15', 'Fraud detection test');
+
+INSERT INTO METRICS VALUES
+(1, 1, 92.50, 0.25, 90.00, 88.00),
+(2, 2, 95.00, 0.20, 93.50, 92.00),
+(3, 3, 91.00, 0.30, 89.50, 90.00);
+
+INSERT INTO DEPLOYMENTS VALUES
+(1, 1, '2025-03-20', 'Production', 'Active'),
+(2, 2, '2025-03-22', 'Testing', 'Active'),
+(3, 3, '2025-03-25', 'Production', 'Inactive');
+
+
+SELECT * FROM MODELS;
+SELECT * FROM DATASETS;
+SELECT * FROM EXPERIMENTS;
+SELECT * FROM METRICS;
+SELECT * FROM DEPLOYMENTS;
