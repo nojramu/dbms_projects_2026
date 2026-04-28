@@ -1,0 +1,217 @@
+CREATE DATABASE FinalProjectDBMS;
+USE FinalProjectDBMS;
+
+CREATE TABLE devices (
+    device_id INT AUTO_INCREMENT PRIMARY KEY,
+    hostname VARCHAR(100) NOT NULL,
+    ip_address VARCHAR(45) UNIQUE NOT NULL,
+    device_type ENUM('Server', 'Workstation', 'Router', 'Firewall') NOT NULL,
+    location VARCHAR(100),
+    status ENUM('Active', 'Inactive') DEFAULT 'Active'
+);
+INSERT INTO devices (hostname, ip_address, device_type, location) VALUES
+('srv-01','192.168.1.1','Server','Data Center'),
+('srv-02','192.168.1.2','Server','Data Center'),
+('pc-01','192.168.1.10','Workstation','Office A'),
+('pc-02','192.168.1.11','Workstation','Office B'),
+('rt-01','192.168.1.254','Router','Main Room'),
+('fw-01','192.168.1.253','Firewall','Main Room'),
+('pc-03','192.168.1.12','Workstation','Office A'),
+('pc-04','192.168.1.13','Workstation','Office B'),
+('srv-03','192.168.1.3','Server','Data Center'),
+('srv-04','192.168.1.4','Server','Data Center'),
+('pc-05','192.168.1.14','Workstation','Office C'),
+('pc-06','192.168.1.15','Workstation','Office C'),
+('pc-07','192.168.1.16','Workstation','Office D'),
+('pc-08','192.168.1.17','Workstation','Office D'),
+('rt-02','192.168.2.1','Router','Branch'),
+('fw-02','192.168.2.2','Firewall','Branch'),
+('srv-05','192.168.2.3','Server','Branch'),
+('pc-09','192.168.2.10','Workstation','Branch'),
+('pc-10','192.168.2.11','Workstation','Branch'),
+('pc-11','192.168.2.12','Workstation','Branch');
+
+CREATE TABLE alerts (
+    alert_id INT AUTO_INCREMENT PRIMARY KEY,
+    device_id INT,
+    alert_type VARCHAR(100),
+    severity ENUM('Low','Medium','High','Critical') NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    description TEXT,
+    FOREIGN KEY (device_id) REFERENCES devices(device_id)
+);
+
+INSERT INTO alerts (device_id, alert_type, severity, description) VALUES
+(1,'Port Scan','Medium','Multiple ports scanned on server'),
+(2,'Malware Detected','High','Trojan found in system files'),
+(3,'Login Failure','Low','User failed login attempts detected'),
+(4,'Brute Force','High','Repeated login attempts detected'),
+(5,'DDoS Attack','Critical','High traffic spike indicating possible DDoS'),
+(6,'Unauthorized Access','High','Unknown user gained access'),
+(7,'Phishing Attempt','Medium','Suspicious email detected'),
+(8,'Data Exfiltration','Critical','Large outbound traffic detected'),
+(9,'Ransomware','Critical','Files encrypted by unknown process'),
+(10,'SQL Injection','High','Injection attempt detected on web server'),
+(11,'Cross-Site Scripting','Medium','XSS attack attempt detected'),
+(12,'Privilege Escalation','High','User gained admin privileges unexpectedly'),
+(13,'Port Scan','Medium','Repeated scanning activity observed'),
+(14,'Malware Infection','High','Virus detected in workstation'),
+(15,'Login Failure','Low','Multiple incorrect password attempts'),
+(16,'DDoS Attack','Critical','Flood of traffic from multiple sources'),
+(17,'Phishing Email','Medium','Fake login page reported'),
+(18,'Botnet Activity','High','Device communicating with botnet'),
+(19,'Data Leak','Critical','Sensitive data transmitted externally'),
+(20,'Backdoor Access','High','Hidden access channel detected');
+
+CREATE TABLE analysts (
+    analyst_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    role ENUM('Tier1','Tier2','Tier3','Manager') NOT NULL,
+    shift VARCHAR(50)
+);
+
+INSERT INTO analysts (name, email, role, shift) VALUES
+('Alice Cruz','alice@email.com','Tier1','Morning'),
+('Bob Reyes','bob@email.com','Tier2','Night'),
+('Charlie Lim','charlie@email.com','Tier3','Morning'),
+('Diana Santos','diana@email.com','Manager','Day'),
+('Evan Tan','evan@email.com','Tier1','Night'),
+('Faith Ong','faith@email.com','Tier2','Morning'),
+('George Yu','george@email.com','Tier3','Night'),
+('Hannah Lee','hannah@email.com','Tier1','Morning'),
+('Ian Go','ian@email.com','Tier2','Night'),
+('Jane Co','jane@email.com','Manager','Day'),
+('Kyle Tan','kyle@email.com','Tier1','Morning'),
+('Lara Lim','lara@email.com','Tier2','Night'),
+('Mark Dee','mark@email.com','Tier3','Morning'),
+('Nina Uy','nina@email.com','Tier1','Night'),
+('Owen Sy','owen@email.com','Tier2','Morning'),
+('Paula Ang','paula@email.com','Tier3','Night'),
+('Quinn Ho','quinn@email.com','Tier1','Morning'),
+('Rico Dy','rico@email.com','Tier2','Night'),
+('Sara Yu','sara@email.com','Tier3','Morning'),
+('Tom Lim','tom@email.com','Manager','Day');
+
+CREATE TABLE incidents (
+    incident_id INT AUTO_INCREMENT PRIMARY KEY,
+    alert_id INT,
+    analyst_id INT,
+    status ENUM('Open','Investigating','Resolved','Closed') DEFAULT 'Open',
+    priority ENUM('Low','Medium','High','Critical'),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (alert_id) REFERENCES alerts(alert_id),
+    FOREIGN KEY (analyst_id) REFERENCES analysts(analyst_id)
+);
+
+INSERT INTO incidents (alert_id, analyst_id, status, priority) VALUES
+(1,1,'Open','Medium'),
+(2,2,'Investigating','High'),
+(3,3,'Resolved','Low'),
+(4,4,'Closed','High'),
+(5,5,'Open','Critical'),
+(6,6,'Investigating','High'),
+(7,7,'Resolved','Medium'),
+(8,8,'Closed','Critical'),
+(9,9,'Open','Critical'),
+(10,10,'Investigating','High'),
+(11,11,'Resolved','Medium'),
+(12,12,'Closed','High'),
+(13,13,'Open','Medium'),
+(14,14,'Investigating','High'),
+(15,15,'Resolved','Low'),
+(16,16,'Closed','Critical'),
+(17,17,'Open','Medium'),
+(18,18,'Investigating','High'),
+(19,19,'Resolved','Critical'),
+(20,20,'Closed','High');
+
+CREATE TABLE response_actions (
+    action_id INT AUTO_INCREMENT PRIMARY KEY,
+    incident_id INT,
+    action_taken TEXT,
+    action_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('Pending','Completed') DEFAULT 'Pending',
+    FOREIGN KEY (incident_id) REFERENCES incidents(incident_id)
+);
+
+INSERT INTO response_actions (incident_id, action_taken, status) VALUES
+(1,'Blocked IP','Completed'),
+(2,'Isolated device','Completed'),
+(3,'Reset password','Completed'),
+(4,'Patched system','Completed'),
+(5,'Activated firewall rules','Pending'),
+(6,'Removed malware','Completed'),
+(7,'User awareness training','Completed'),
+(8,'Disconnected network','Completed'),
+(9,'Backup restoration','Pending'),
+(10,'Filtered traffic','Completed'),
+(11,'Sanitized input','Completed'),
+(12,'Revoked privileges','Completed'),
+(13,'Monitored traffic','Pending'),
+(14,'Deleted malicious file','Completed'),
+(15,'Account lockout','Completed'),
+(16,'Traffic reroute','Completed'),
+(17,'Blocked domain','Pending'),
+(18,'Killed process','Completed'),
+(19,'Data encryption','Completed'),
+(20,'System reboot','Completed');
+
+SELECT 
+    i.incident_id,
+    d.hostname,
+    a.alert_type,
+    an.name AS analyst,
+    i.status,
+    r.action_taken
+FROM incidents i
+JOIN alerts a ON i.alert_id = a.alert_id
+JOIN devices d ON a.device_id = d.device_id
+JOIN analysts an ON i.analyst_id = an.analyst_id
+JOIN response_actions r ON i.incident_id = r.incident_id;
+
+-- incidents per analyst
+SELECT an.name, COUNT(*) AS total_incidents
+FROM analysts an
+JOIN incidents i ON an.analyst_id = i.analyst_id
+GROUP BY an.name;
+
+-- alerts with device info
+SELECT d.hostname, a.alert_type, a.severity
+FROM alerts a
+JOIN devices d ON a.device_id = d.device_id;
+
+-- analysts handling high priority incidents
+SELECT name
+FROM analysts
+WHERE analyst_id IN (
+    SELECT analyst_id FROM incidents WHERE priority = 'Critical'
+);
+
+-- devices with alerts
+SELECT hostname
+FROM devices
+WHERE device_id IN (
+    SELECT device_id FROM alerts
+);
+
+-- count incidents by status
+SELECT status, COUNT(*) 
+FROM incidents
+GROUP BY status;
+
+-- average incidents per analyst
+SELECT AVG(incident_count)
+FROM (
+    SELECT COUNT(*) AS incident_count
+    FROM incidents
+    GROUP BY analyst_id
+) AS sub;
+
+UPDATE incidents
+SET status = 'Resolved'
+WHERE incident_id = 1;
+
+DELETE FROM response_actions
+WHERE action_id = 20;
+
