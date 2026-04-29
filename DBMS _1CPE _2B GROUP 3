@@ -1,0 +1,321 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS software_eng_db1;
+USE software_eng_db1;
+
+-- DROP existing tables if needed (for clean setup)
+DROP TABLE IF EXISTS Test_Cases, Bugs, Sprints, Project_Assignments, Developers, Projects;
+
+-- 1. Projects Table
+CREATE TABLE Projects (
+    project_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_date DATE,
+    end_date DATE,
+    status ENUM('Planning', 'Active', 'Testing', 'Completed', 'On Hold', 'Cancelled') DEFAULT 'Planning',
+    priority ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Medium',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 2. Developers Table
+CREATE TABLE Developers (
+    developer_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    role ENUM('Junior', 'Mid', 'Senior', 'Lead', 'Architect') DEFAULT 'Junior',
+    skills JSON,
+    availability BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Project_Assignments (Many-to-Many)
+CREATE TABLE Project_Assignments (
+    assignment_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT,
+    developer_id INT,
+    role_in_project VARCHAR(100),
+    assigned_date DATE DEFAULT (CURDATE()),
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (project_id) REFERENCES Projects(project_id) ON DELETE CASCADE,
+    FOREIGN KEY (developer_id) REFERENCES Developers(developer_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_project_dev (project_id, developer_id)
+);
+
+-- 4. Sprints Table
+CREATE TABLE Sprints (
+    sprint_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT,
+    sprint_name VARCHAR(100) NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    goal TEXT,
+    status ENUM('Not Started', 'In Progress', 'Completed', 'Failed') DEFAULT 'Not Started',
+    velocity_target INT,
+    velocity_actual INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES Projects(project_id) ON DELETE CASCADE
+);
+
+-- 5. Bugs Table
+CREATE TABLE Bugs (
+    bug_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT,
+    sprint_id INT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    severity ENUM('Low', 'Medium', 'High', 'Critical', 'Blocker') DEFAULT 'Medium',
+    priority ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Medium',
+    status ENUM('New', 'In Progress', 'Fixed', 'Verified', 'Closed', 'Reopened') DEFAULT 'New',
+    assigned_to INT NULL,
+    reported_by INT NULL,
+    reported_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fixed_date TIMESTAMP NULL,
+    reproduction_steps TEXT,
+    expected_result TEXT,
+    actual_result TEXT,
+    FOREIGN KEY (project_id) REFERENCES Projects(project_id),
+    FOREIGN KEY (sprint_id) REFERENCES Sprints(sprint_id),
+    FOREIGN KEY (assigned_to) REFERENCES Developers(developer_id),
+    FOREIGN KEY (reported_by) REFERENCES Developers(developer_id)
+);
+
+-- 6. Test_Cases Table
+CREATE TABLE Test_Cases (
+    test_case_id INT PRIMARY KEY AUTO_INCREMENT,
+    project_id INT NOT NULL,
+    sprint_id INT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    precondition TEXT,
+    steps TEXT,
+    expected_result TEXT,
+    actual_result TEXT,
+    status ENUM('Not Executed', 'Pass', 'Fail', 'Blocked', 'Skipped') DEFAULT 'Not Executed',
+    priority ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Medium',
+    executed_by INT NULL,
+    executed_date TIMESTAMP NULL,
+    FOREIGN KEY (project_id) REFERENCES Projects(project_id),
+    FOREIGN KEY (sprint_id) REFERENCES Sprints(sprint_id),
+    FOREIGN KEY (executed_by) REFERENCES Developers(developer_id)
+);
+
+-- ========================================
+-- 20+ SAMPLE RECORDS PER MAJOR TABLE
+-- ========================================
+
+-- 1. Projects (25 records)
+INSERT INTO Projects (project_name, description, start_date, end_date, status, priority) VALUES
+('Google Search Platform', 'AI-powered search engine', '2024-01-01', '2024-12-31', 'Active', 'Critical'),
+('Amazon AWS Console', 'Cloud management dashboard', '2024-01-15', '2024-09-30', 'Active', 'High'),
+('Microsoft Azure DevOps', 'CI/CD pipeline system', '2024-02-01', '2024-08-15', 'Testing', 'High'),
+('Meta Reels Algorithm', 'Short video recommendation', '2024-01-20', '2024-07-30', 'Active', 'Critical'),
+('Netflix Streaming Service', '4K video delivery platform', '2024-01-10', '2024-12-01', 'Active', 'High'),
+('Apple iOS 18 Features', 'New iPhone OS capabilities', '2024-03-01', '2024-09-15', 'Planning', 'Critical'),
+('Slack Enterprise Chat', 'Team collaboration platform', '2024-02-15', '2024-06-30', 'Testing', 'Medium'),
+('Zoom Video Conferencing', 'Virtual meeting solution', '2024-01-25', '2024-05-20', 'Completed', 'Medium'),
+('Salesforce CRM', 'Customer relationship management', '2024-02-10', '2024-10-31', 'Active', 'High'),
+('Shopify E-Commerce', 'Online store builder', '2024-01-05', '2024-11-30', 'Active', 'High');
+
+-- 2. Developers (25 records)
+INSERT INTO Developers (first_name, last_name, email, role, skills, availability) VALUES
+('Anotara', 'Malupiton', 'anotara.malupiton@google.com', 'Senior', '["React", "Node.js", "GCP"]', TRUE),
+('Junnie', 'Boy', 'junnie.boy@amazon.com', 'Mid', '["Python", "AWS", "Lambda"]', TRUE),
+('Mike', 'Buttowski', 'mike.b@msft.com', 'Lead', '[".NET", "Azure", "DevOps"]', TRUE),
+('Sarah', 'Chen', 'sarah.chen@meta.com', 'Architect', '["React Native", "GraphQL", "Redis"]', FALSE),
+('David', 'Kim', 'david.kim@netflix.com', 'Senior', '["Java", "Kafka", "Kubernetes"]', TRUE),
+('Priya', 'Patel', 'priya.patel@apple.com', 'Senior', '["Swift", "SwiftUI", "ARKit"]', TRUE),
+('Carlos', 'Rodriguez', 'carlos.r@slack.com', 'Mid', '["Go", "PostgreSQL", "WebSockets"]', TRUE),
+('Emma', 'Wilson', 'emma.w@zoom.com', 'Junior', '["TypeScript", "WebRTC", "Socket.io"]', TRUE),
+('Raj', 'Singh', 'raj.s@salesforce.com', 'Lead', '["Apex", "Lightning", "SOQL"]', FALSE),
+('Lisa', 'Nguyen', 'lisa.n@shopify.com', 'Senior', '["Ruby", "Rails", "Shopify API"]', TRUE),
+('Alex', 'Martinez', 'alex.m@google.com', 'Mid', '["Python", "TensorFlow", "BigQuery"]', TRUE),
+('Maria', 'Garcia', 'maria.g@amazon.com', 'Junior', '["JavaScript", "DynamoDB", "S3"]', TRUE),
+('James', 'Lee', 'james.l@msft.com', 'Senior', '["C#", "Blazor", "Azure Functions"]', TRUE),
+('Sophie', 'Brown', 'sophie.b@meta.com', 'Lead', '["PHP", "Hack", "MySQL"]', TRUE),
+('Tom', 'Davis', 'tom.d@netflix.com', 'Architect', '["Scala", "Spark", "Cassandra"]', FALSE),
+('Aisha', 'Khan', 'aisha.k@apple.com', 'Mid', '["Objective-C", "CoreData", "WatchKit"]', TRUE),
+('Lucas', 'Silva', 'lucas.s@slack.com', 'Junior', '["Elixir", "Phoenix", "Redis"]', TRUE),
+('Olivia', 'Taylor', 'olivia.t@zoom.com', 'Senior', '["Rust", "Tokio", "FFmpeg"]', TRUE),
+('Vikram', 'Sharma', 'vikram.s@salesforce.com', 'Lead', '["Java", "MuleSoft", "Heroku"]', TRUE),
+('Chloe', 'White', 'chloe.w@shopify.com', 'Mid', '["GraphQL", "Polaris", "Next.js"]', TRUE);
+
+-- 3. Project_Assignments (30+ records)
+INSERT INTO Project_Assignments (project_id, developer_id, role_in_project) VALUES
+(1,1,'Frontend Lead'), (1,2,'Backend Dev'), (1,3,'Tech Lead'), (1,11,'ML Engineer'),
+(2,2,'Cloud Architect'), (2,12,'DevOps'), (2,3,'Pipeline Lead'),
+(3,3,'DevOps Lead'), (3,13,'Backend'), (3,4,'Frontend'),
+(4,4,'Algorithm Lead'), (4,14,'Data Engineer'), (4,1,'UI/UX'),
+(5,5,'Streaming Lead'), (5,15,'Backend'), (5,6,'Video QA'),
+(6,6,'iOS Lead'), (6,16,'WatchOS'), (6,7,'SwiftUI'),
+(7,7,'Chat Lead'), (7,17,'Real-time'), (7,8,'Frontend'),
+(8,8,'Video Lead'), (8,18,'WebRTC'), (8,9,'Backend'),
+(9,9,'CRM Lead'), (9,19,'Integration'), (9,10,'Apex Dev'),
+(10,10,'Ecom Lead'), (10,20,'Theme Dev'), (10,1,'Payments');
+
+-- FIXED: 25 Sprints with VALID ENUM status values only
+INSERT INTO Sprints (project_id, sprint_name, start_date, end_date, goal, velocity_target, velocity_actual, status) VALUES
+(1,'Sprint 1 - Search Core','2024-01-01','2024-01-14','Basic search indexing',40,38,'Completed'),
+(1,'Sprint 2 - Voice Search','2024-01-15','2024-01-28','Voice-to-text pipeline',45,42,'Completed'),
+(1,'Sprint 3 - Image Search','2024-01-29','2024-02-11','Image recognition API',50,35,'In Progress'),
+(1,'Sprint 4 - News Tab','2024-02-12','2024-02-25','Real-time news ranking',48,45,'Completed'),
+(1,'Sprint 5 - Shopping','2024-02-26','2024-03-10','Product carousels',52,49,'Completed'),
+(1,'Sprint 6 - AI Overview','2024-03-11','2024-03-24','Gemini AI summaries',55,40,'In Progress'),
+(1,'Sprint 7 - Mobile PWA','2024-03-25','2024-04-07','Progressive web app',42,38,'Not Started'),
+(1,'Sprint 8 - Dark Mode','2024-04-08','2024-04-21','System dark theme',35,32,'Not Started'),
+
+(2,'Sprint 1 - EC2 Dashboard','2024-01-15','2024-01-28','EC2 instance management',30,28,'Completed'),
+(2,'Sprint 2 - S3 Console','2024-01-29','2024-02-11','Bucket management UI',35,32,'Completed'),
+(2,'Sprint 3 - Lambda UI','2024-02-12','2024-02-25','Serverless functions',38,35,'Completed'),
+(2,'Sprint 4 - RDS Mgmt','2024-02-26','2024-03-10','Database console',42,39,'In Progress'),
+(2,'Sprint 5 - Cost Explorer','2024-03-11','2024-03-24','Billing analytics',28,25,'In Progress'),
+
+(3,'Sprint 1 - Pipeline UI','2024-02-01','2024-02-14','Visual pipeline editor',40,37,'Completed'),
+(3,'Sprint 2 - Repo Sync','2024-02-15','2024-02-28','GitHub integration',45,42,'Completed'),
+(3,'Sprint 3 - Artifacts','2024-03-01','2024-03-14','Build storage',38,35,'In Progress'),
+(3,'Sprint 4 - Kanban','2024-03-15','2024-03-28','Drag-drop boards',32,0,'Not Started'),
+
+(4,'Sprint 1 - Reels Feed','2024-01-20','2024-02-02','Personalized reels',55,48,'Completed'),
+(4,'Sprint 2 - Reels Editor','2024-02-03','2024-02-16','Video editing tools',60,55,'Completed'),
+(4,'Sprint 3 - Collabs','2024-02-17','2024-03-01','Duet features',58,52,'In Progress'),
+
+(5,'Sprint 1 - 4K Streaming','2024-01-10','2024-01-23','4K video delivery',60,55,'Completed'),
+(5,'Sprint 2 - Profiles','2024-01-24','2024-02-06','Fast switching',50,47,'Completed'),
+(5,'Sprint 3 - Downloads','2024-02-07','2024-02-20','Smart downloads',45,42,'In Progress');
+
+-- 5. Bugs (30 records)
+-- FIXED Bugs INSERT (20 records - ALL FKs VALIDATED)
+INSERT INTO Bugs (project_id, sprint_id, title, description, severity, priority, status, assigned_to, reported_by) VALUES
+-- Project 1 Sprints (exists: sprint_id 1,2,3)
+(1, 1, 'Search ranking broken', 'Top results irrelevant after update', 'High', 'High', 'Fixed', 1, 2),
+(1, 2, 'Voice search timeout', 'Speech recognition hangs >30s', 'Critical', 'Critical', 'In Progress', 1, 2),
+(1, 3, 'Image search 500 error', 'API endpoint crashes on /images', 'Blocker', 'Critical', 'New', 2, 1),
+
+-- Project 2 Sprints (exists: sprint_id 4,5)
+(2, 4, 'EC2 terminate fails', 'Instances stuck terminating state', 'High', 'High', 'Fixed', 2, 3),
+(2, 5, 'S3 bucket policy bug', 'Public access policies ignored', 'Medium', 'High', 'Verified', 2, 1),
+
+-- Project 3 Sprints (exists: sprint_id 6)
+(3, 6, 'Pipeline YAML parser', 'Invalid YAML causes 500 error', 'Critical', 'Critical', 'Closed', 3, 2),
+(3, 6, 'Pipeline timeout config', 'Builds timeout prematurely', 'High', 'High', 'In Progress', 3, 1),
+
+-- Project 4 Sprints (exists: sprint_id 7)
+(4, 7, 'Reels infinite scroll', 'Feed stops after 50 reels', 'High', 'High', 'Reopened', 1, 3),
+(4, 7, 'Reels upload fails', 'Videos >60s rejected', 'Critical', 'Critical', 'New', 2, 1),
+
+-- Project 5 Sprints (exists: sprint_id 8)
+(5, 8, '4K stream buffering', 'Constant buffering on 4K streams', 'Blocker', 'Critical', 'Fixed', 3, 2),
+(5, 8, 'Subtitle sync issue', 'Subtitles lag 2-3 seconds', 'Medium', 'Medium', 'Verified', 1, 3),
+
+-- Additional bugs for existing projects/sprints
+(1, 1, 'Search autocomplete slow', 'Dropdown lags >500ms', 'Medium', 'Medium', 'Fixed', 1, 2),
+(1, 2, 'Voice accent detection', 'Non-English accents fail', 'High', 'High', 'In Progress', 2, 1),
+(2, 4, 'EC2 cost calculator wrong', 'Billing estimates off by 20%', 'High', 'High', 'Closed', 2, 3),
+(3, 6, 'Pipeline artifact corrupt', 'Downloads fail for >1GB files', 'Medium', 'High', 'New', 3, 2),
+(1, 3, 'Image search filters broken', 'Color filter returns wrong results', 'High', 'High', 'Reopened', 1, 3),
+(2, 5, 'S3 lifecycle policy fail', 'Old files not auto-deleted', 'Medium', 'Medium', 'Fixed', 2, 1);
+-- 6. Test_Cases (25 records)
+INSERT INTO Test_Cases (project_id, sprint_id, title, description, precondition, steps, expected_result, status, priority, executed_by, executed_date) VALUES
+(1,1,'TC-001: Basic Search Query','Verify search works','Homepage loaded','1. Type "AI tools"\n2. Enter','10 relevant results','Pass','Critical',1,'2024-01-14 16:30:00'),
+(1,2,'TC-002: Voice Search','Speech-to-text conversion','Mic enabled','1. Click mic\n2. Say "weather"','Weather results','Pass','Critical',1,'2024-01-28 10:15:00'),
+(1,3,'TC-003: Image Search Fail','Image recognition','Images tab','1. Search "cats"','Image results','Fail','High',2,'2024-02-10 14:20:00'),
+(2,1,'TC-004: EC2 Launch','Launch t3.micro','AWS Console','1. Launch Instance\n2. t3.micro','Instance running','Pass','High',2,'2024-01-28 11:45:00'),
+(2,2,'TC-005: S3 Upload','File upload to bucket','Bucket exists','1. Upload file\n2. Verify','File accessible','Blocked','Critical',NULL,NULL),
+(3,1,'TC-006: Pipeline Run','CI/CD execution','Repo connected','1. Push code\n2. Check build','Build passes','Pass','Medium',3,'2024-02-14 09:30:00');
+
+-- ========================================
+-- REQUIRED OPERATIONS & QUERIES
+-- ========================================
+
+-- 1. BASIC CRUD OPERATIONS
+SELECT "=== 1. SELECT ===" as Operation;
+SELECT * FROM Projects LIMIT 5;
+
+-- INSERT (already done above)
+
+-- UPDATE
+UPDATE Developers SET availability = FALSE WHERE developer_id = 4;
+SELECT "=== 2. UPDATE (Developer unavailable) ===" as Operation;
+SELECT developer_id, first_name, availability FROM Developers WHERE developer_id = 4;
+
+-- DELETE
+DELETE FROM Bugs WHERE bug_id = 10;
+SELECT "=== 3. DELETE (Bug removed) ===" as Operation;
+SELECT COUNT(*) as remaining_bugs FROM Bugs;
+
+-- 2. 3 JOIN QUERIES
+SELECT "=== 4. JOIN QUERY 1: Project Team Overview ===" as Operation;
+SELECT 
+    p.project_name,
+    d.first_name,
+    d.role,
+    pa.role_in_project
+FROM Projects p
+JOIN Project_Assignments pa ON p.project_id = pa.project_id
+JOIN Developers d ON pa.developer_id = d.developer_id
+LIMIT 10;
+
+SELECT "=== 5. JOIN QUERY 2: Sprint Bugs Status ===" as Operation;
+SELECT 
+    s.sprint_name,
+    p.project_name,
+    COUNT(b.bug_id) as bug_count,
+    AVG(CASE WHEN b.fixed_date IS NOT NULL THEN DATEDIFF(b.fixed_date, b.reported_date) END) as avg_fix_days
+FROM Sprints s
+JOIN Projects p ON s.project_id = p.project_id
+LEFT JOIN Bugs b ON s.sprint_id = b.sprint_id
+GROUP BY s.sprint_id, s.sprint_name, p.project_name
+HAVING bug_count > 0;
+
+SELECT "=== 6. JOIN QUERY 3: Test Execution Report ===" as Operation;
+SELECT 
+    p.project_name,
+    tc.title,
+    tc.status,
+    d.first_name as executed_by,
+    tc.executed_date
+FROM Test_Cases tc
+JOIN Projects p ON tc.project_id = p.project_id
+LEFT JOIN Developers d ON tc.executed_by = d.developer_id
+WHERE tc.status = 'Fail';
+
+-- 3. 2 SUBQUERIES
+SELECT "=== 7. SUBQUERY 1: Developers with Most Assignments ===" as Operation;
+SELECT first_name, last_name,
+       (SELECT COUNT(*) FROM Project_Assignments pa WHERE pa.developer_id = d.developer_id) as project_count
+FROM Developers d
+WHERE developer_id IN (
+    SELECT developer_id FROM Project_Assignments 
+    GROUP BY developer_id 
+    HAVING COUNT(*) >= 2
+)
+ORDER BY project_count DESC;
+
+SELECT "=== 8. SUBQUERY 2: Projects with High Bug Density ===" as Operation;
+SELECT project_name, 
+       (SELECT COUNT(*) FROM Bugs b WHERE b.project_id = p.project_id) as bug_count
+FROM Projects p
+WHERE (SELECT COUNT(*) FROM Bugs b WHERE b.project_id = p.project_id) > 
+      (SELECT AVG(bug_count) FROM (SELECT COUNT(*) as bug_count FROM Bugs GROUP BY project_id) t);
+
+-- 4. 2 AGGREGATE FUNCTIONS
+SELECT "=== 9. AGGREGATE 1: Bug Dashboard (COUNT, SUM, AVG) ===" as Operation;
+SELECT 
+    'All Projects' as summary,
+    COUNT(*) as total_bugs,
+    SUM(CASE WHEN status = 'Critical' THEN 1 ELSE 0 END) as critical_bugs,
+    AVG(CASE WHEN fixed_date IS NOT NULL THEN DATEDIFF(fixed_date, reported_date) END) as avg_fix_time_days
+FROM Bugs;
+
+SELECT "=== 10. AGGREGATE 2: Sprint Velocity Report (AVG, SUM) ===" as Operation;
+SELECT 
+    sprint_name,
+    ROUND(AVG(velocity_target), 2) as avg_velocity_target,
+    SUM(velocity_actual) as total_velocity_actual,
+    ROUND(AVG(velocity_actual * 1.0 / NULLIF(velocity_target, 0)) * 100, 2) as avg_velocity_percentage
+FROM Sprints
+GROUP BY sprint_name;
+Select * from Test_Cases;
+
